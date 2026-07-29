@@ -79,6 +79,7 @@ class Document(Base):
     source_authority: Mapped[str] = mapped_column(server_default="CONVERSATIONAL")
     sha256: Mapped[str]  # content address of the immutable raw file
     raw_path: Mapped[str]
+    cleaned_path: Mapped[str | None]  # derived canonical text (never the raw)
     status: Mapped[str] = mapped_column(server_default="uploaded")
     doc_metadata: Mapped[dict[str, Any]] = mapped_column(server_default=text("'{}'::jsonb"))
     pipeline_version: Mapped[int] = mapped_column(Integer, server_default="1")

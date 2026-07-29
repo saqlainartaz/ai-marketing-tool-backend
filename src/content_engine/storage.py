@@ -16,6 +16,11 @@ class RawStorage(Protocol):
         """Store immutably; return the storage path. Idempotent per (client, sha)."""
         ...
 
+    def put_derived(self, client_id: uuid.UUID, name: str, data: bytes) -> str:
+        """Store a derived artifact (cleaned text, etc.) — overwritable, kept
+        apart from the immutable raw tree."""
+        ...
+
     def get(self, path: str) -> bytes: ...
 
 
@@ -35,6 +40,14 @@ class LocalDiskStorage:
         tmp = target.with_suffix(".tmp")
         tmp.write_bytes(data)
         tmp.replace(target)  # atomic publish
+        return str(target)
+
+    def put_derived(self, client_id: uuid.UUID, name: str, data: bytes) -> str:
+        target = self._root / str(client_id) / "derived" / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        tmp = target.with_suffix(target.suffix + ".tmp")
+        tmp.write_bytes(data)
+        tmp.replace(target)
         return str(target)
 
     def get(self, path: str) -> bytes:

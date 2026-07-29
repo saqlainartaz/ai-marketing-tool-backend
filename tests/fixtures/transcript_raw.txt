@@ -1,0 +1,6 @@
+[00:00:02] Sarah Chen: Hi! Can you hear me okay?
+[00:00:04] JOHN SMITH: Yep, loud and clear.
+[00:00:06] Sarah Chen: Um, great. So, uh, today I wanted to walk through pricing.
+[00:00:11] JOHN SMITH: Honestly, the price feels steep compared to what Acme quoted us.
+[00:00:15] Sarah Chen: That's fair. Most teams see payback in six weeks.
+[00:00:21] JOHN SMITH: Send the breakdown to john.smith@buyer.com or call 555-123-4567.

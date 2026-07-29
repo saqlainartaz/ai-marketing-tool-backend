@@ -48,8 +48,14 @@ vendoring/modifying it.
 
 ## 2026-07-29 — Embedding dimension pinned at 1024
 
-`atoms.embedding` is `vector(1024)` (Voyage voyage-3 default). The fake embedder must
-emit 1024-dim vectors so the M1A→M1B provider switch needs no column migration.
+`atoms.embedding` is `vector(1024)`. The fake embedder must emit 1024-dim vectors so
+the M1A→M1B provider switch needs no column migration.
+
+Update (verified 2026-07-30 against Voyage docs): M1B should use `voyage-4`
+($0.06/M tokens, 1024-dim default — same pin, no migration; 200M-token free tier
+covers ~400 client corpora). Voyage is the embeddings provider Anthropic's docs
+recommend; Anthropic ships no embedding model. `voyage-4-lite` ($0.02/M) is the
+step-down if cost ever matters; embedding cost is a rounding error vs LLM extraction.
 
 ## 2026-07-29 — Sync SQLAlchemy sessions (not async)
 

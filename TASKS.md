@@ -91,7 +91,7 @@ cleaned). Next: Issue 5 fake providers + atomizer + /atoms. No blockers.
 
 ---
 
-## Issue 5 — Fake providers + fake atomizer  `feat/5-fake-providers`
+## Issue 5 — Fake providers + fake atomizer  `feat/5-fake-providers`  [done 2026-07-29]
 
 **Goal:** Deterministic keyless pipeline end-to-end: cleaned text → provisional atoms
 with provenance + embeddings.
@@ -106,10 +106,17 @@ atoms land `provisional` with full provenance; jobs table + in-process async wor
 **Non-goals:** real Anthropic/Voyage calls, search, context.
 
 **Done when:**
-- [ ] Same input twice → byte-identical atoms (determinism test)
-- [ ] Every atom has document_id, location, confidence, evidence_kind, status
-- [ ] `/atoms` returns same-client data only
-- [ ] Full pytest green, keyless
+- [x] Same input twice → byte-identical atoms (determinism test)
+- [x] Every atom has document_id, location, confidence, evidence_kind, status
+- [x] `/atoms` returns same-client data only (+ `trust: untrusted` label)
+- [x] Full pytest green, keyless (45 passed)
+
+Breadcrumb: providers registry (fake default, env-resolved, lazy) + FakeLLM/FakeEmbedder
+(hash-based 1024-dim); fake atomizer (rule-based, 9-type-compatible, guardrails);
+run_atomise_and_embed (delete+reinsert idempotency, lineage atomise/embed); jobs worker
+(engine_worker role w/ explicit jobs-only RLS policy, FOR UPDATE SKIP LOCKED, one
+attempt then failed+recorded); upload enqueues; /atoms endpoint. Migration 0003.
+Next: Issue 6 E2E + /reprocess. No blockers.
 
 ---
 

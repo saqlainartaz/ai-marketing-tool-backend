@@ -20,5 +20,15 @@ class Settings(BaseSettings):
         "postgresql+psycopg://content_engine:content_engine_dev@localhost:5432/content_engine"
     )
 
+    # Worker connection — sees jobs across tenants via an explicit RLS policy
+    # (migration 0003); never used for document/atom access.
+    worker_database_url: str = (
+        "postgresql+psycopg://engine_worker:engine_worker_dev@localhost:5432/content_engine"
+    )
+
     # Immutable raw-file store (local disk in dev; S3-compatible interface).
     raw_storage_root: str = "./data/raw"
+
+    # In-process pipeline worker (no Redis/Celery in M1).
+    worker_enabled: bool = True
+    job_poll_interval: float = 0.5

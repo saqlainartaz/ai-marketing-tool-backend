@@ -7,7 +7,7 @@ from sqlalchemy import select
 from content_engine.api.schemas import DocumentOut, SourceAuthority, SourceType
 from content_engine.auth import require_service_token
 from content_engine.db import tenant_session
-from content_engine.models import Document
+from content_engine.models import Document, Job
 from content_engine.storage import content_address
 
 router = APIRouter(
@@ -52,6 +52,7 @@ async def upload_document(
         )
         session.add(doc)
         session.flush()
+        session.add(Job(client_id=client_id, document_id=doc.id, kind="process_document"))
         response.status_code = 201
         session.expunge(doc)
         return doc

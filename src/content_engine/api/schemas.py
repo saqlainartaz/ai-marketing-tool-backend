@@ -45,3 +45,24 @@ class DocumentOut(BaseModel):
     status: str
     pipeline_version: int
     created_at: datetime
+
+
+class AtomOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    client_id: uuid.UUID
+    document_id: uuid.UUID
+    atom_type: str
+    text: str
+    payload: dict
+    provenance: dict
+    confidence: float | None
+    impact: int | None
+    evidence_kind: str
+    status: str
+    content_hash: str
+    created_at: datetime
+    # Retrieved source-derived text is untrusted input for any LLM consumer
+    # (prompt-injection hygiene — docs/AI_CODING_RULES.md).
+    trust: Literal["untrusted"] = "untrusted"

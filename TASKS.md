@@ -65,7 +65,7 @@ Next: Issue 4 parse+clean. No blockers.
 
 ---
 
-## Issue 4 — Parse + clean (text/md)  `feat/4-parse-clean`
+## Issue 4 — Parse + clean (text/md)  `feat/4-parse-clean`  [done 2026-07-29]
 
 **Goal:** Text/markdown parse + type-aware transcript cleaner, provenance-preserving.
 
@@ -78,10 +78,16 @@ transcripts; document status transitions `uploaded → parsed → cleaned`.
 **Non-goals:** PDF/docx (Docling lands in M1B), atomisation, embeddings.
 
 **Done when:**
-- [ ] Golden-file tests: fixture transcript → expected cleaned output, stable
-- [ ] Raw file unchanged; cleaned text stored as derived artifact
-- [ ] Lineage records `{source_sha, stage, cleaner_version, ts}` per transformation
-- [ ] Full pytest green, keyless
+- [x] Golden-file tests: fixture transcript → expected cleaned output, stable
+- [x] Raw file unchanged; cleaned text stored as derived artifact (`cleaned_path`,
+      migration 0002; `put_derived` kept apart from immutable raw tree)
+- [x] Lineage records `{source_sha, stage, cleaner_version, ts}` per transformation
+- [x] Full pytest green, keyless (30 passed)
+
+Breadcrumb: `pipeline/` package — parse.py (eager heading tree, TOC strip, anchors),
+clean.py (timestamps, speaker normalization, fillers, small-talk, PII email/phone,
+versioned), runner.py `run_parse_and_clean` (idempotent, statuses uploaded→parsed→
+cleaned). Next: Issue 5 fake providers + atomizer + /atoms. No blockers.
 
 ---
 

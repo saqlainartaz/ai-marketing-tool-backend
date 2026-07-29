@@ -31,7 +31,7 @@ class FakeEmbedder:
 
     name = "fake"
 
-    def embed(self, texts: list[str]) -> list[list[float]]:
+    def embed(self, texts: list[str], *, input_type: str = "document") -> list[list[float]]:
         return [self._one(text) for text in texts]
 
     @staticmethod

@@ -25,7 +25,7 @@ class LLMProvider(Protocol):
 class EmbeddingProvider(Protocol):
     name: str
 
-    def embed(self, texts: list[str]) -> list[list[float]]: ...
+    def embed(self, texts: list[str], *, input_type: str = "document") -> list[list[float]]: ...
 
 
 def _build_fake_llm() -> LLMProvider:
@@ -40,8 +40,20 @@ def _build_fake_embedder() -> EmbeddingProvider:
     return FakeEmbedder()
 
 
-_LLM_BUILDERS = {"fake": _build_fake_llm}
-_EMBEDDING_BUILDERS = {"fake": _build_fake_embedder}
+def _build_anthropic_llm() -> LLMProvider:
+    from content_engine.providers.anthropic import AnthropicLLM
+
+    return AnthropicLLM()
+
+
+def _build_voyage_embedder() -> EmbeddingProvider:
+    from content_engine.providers.voyage import VoyageEmbedder
+
+    return VoyageEmbedder()
+
+
+_LLM_BUILDERS = {"fake": _build_fake_llm, "anthropic": _build_anthropic_llm}
+_EMBEDDING_BUILDERS = {"fake": _build_fake_embedder, "voyage": _build_voyage_embedder}
 
 
 def get_llm_provider(name: str | None = None) -> LLMProvider:

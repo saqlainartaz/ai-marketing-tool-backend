@@ -132,8 +132,27 @@ extraction prompts, hybrid search under RLS, /search, /context). No blockers.
 
 ---
 
-## M1B issues (defined when M1A ships): real providers + parity eval, Docling,
-## extraction prompts, hybrid search under RLS, /search, /context, 3-fixture demo.
+## Issue 7 — Real provider adapters + parity eval  `feat/7-real-providers`  [done 2026-07-30]
+
+**Goal:** Anthropic LLM + Voyage embedding adapters behind the existing registry;
+parity eval. Keyless tests stay green; real calls activate only via env keys.
+
+**Done when:**
+- [x] `ENGINE_LLM_PROVIDER=anthropic` / `ENGINE_EMBEDDING_PROVIDER=voyage` resolve
+- [x] Missing keys fail closed at call time with helpful errors (never at import)
+- [x] Fake + real embedders share the `input_type` signature (query vs document)
+- [x] Parity eval: fake always, real env-gated, exit 1 on failure — ALL PASS keyless
+- [x] Full pytest green keyless (51 passed, 2 live-key tests skipped)
+
+Breadcrumb: anthropic (MIT) + voyageai (MIT) added; AnthropicLLM defaults to
+claude-opus-5 (env ENGINE_ANTHROPIC_MODEL), sends no sampling params (400 on Opus 5),
+enables server-side refusal fallbacks (`fallbacks: "default"`), raises on refusal;
+VoyageEmbedder defaults voyage-4 @1024 (env ENGINE_VOYAGE_MODEL). Next: Issue 8 real
+extraction prompts. Needs ANTHROPIC_API_KEY + VOYAGE_API_KEY + a real anonymized
+transcript to validate quality. No blockers for code; keys block live validation.
+
+## Remaining M1B issues: Issue 8 extraction prompts (real atomizer), Issue 9 Docling,
+## Issue 10 hybrid search + /search, Issue 11 /context, Issue 12 real-provider demo.
 ## M1C issues: confirm/override/deprecate + decisions workflow + survival tests.
 
 ---

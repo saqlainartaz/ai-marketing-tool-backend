@@ -46,6 +46,25 @@ here. Binding source: starter-kit/docs/BRIEF.md. Notable: psycopg is LGPL-3.0 �
 via dynamic linking, unmodified, which is fine for a hosted service; revisit only if
 vendoring/modifying it.
 
+## 2026-07-29 — Embedding dimension pinned at 1024
+
+`atoms.embedding` is `vector(1024)` (Voyage voyage-3 default). The fake embedder must
+emit 1024-dim vectors so the M1A→M1B provider switch needs no column migration.
+
+## 2026-07-29 — Sync SQLAlchemy sessions (not async)
+
+Endpoints use sync sessions in FastAPI's threadpool. Less complexity in tests and the
+pipeline; revisit only if concurrency profiling demands async.
+
+## 2026-07-29 — App role is a non-superuser created in migration 0001
+
+Superusers/BYPASSRLS roles bypass RLS entirely, so serving requests as the compose
+admin user would silently disable isolation. `engine_app` (NOSUPERUSER NOBYPASSRLS,
+dev password in the migration; production rotates via ALTER ROLE outside migrations).
+RLS policies use `NULLIF(current_setting('app.client_id', true), '')::uuid` — the
+NULLIF guards the empty string a pooled connection reports after SET LOCAL on an
+otherwise-undefined GUC. Verified by the zero-recall regression test.
+
 ## 2026-07-29 — Tooling: uv (Apache-2.0/MIT)
 
 Installed via pip; invoked as `python -m uv` (scripts dir not on bash PATH on this

@@ -22,7 +22,7 @@ docker-compose (pgvector Postgres), pytest wiring, operating files, .gitignore.
 
 ---
 
-## Issue 2 — Schema + RLS  `feat/2-schema-rls`
+## Issue 2 — Schema + RLS  `feat/2-schema-rls`  [done 2026-07-29]
 
 **Goal:** Full M1 schema with DB-enforced tenant isolation.
 
@@ -34,11 +34,11 @@ service-token auth dependency.
 **Non-goals:** upload handling, pipeline stages, real providers.
 
 **Done when:**
-- [ ] Alembic migration creates all tables + RLS policies against dockerized Postgres
-- [ ] Cross-tenant zero-recall regression test passes **with the app-layer guard
-      disabled** (DB policy alone blocks leakage)
-- [ ] Service boots only with valid service-token config; fails closed otherwise
-- [ ] Full pytest green, keyless
+- [x] Alembic migration creates all tables + RLS policies against dockerized Postgres
+- [x] Cross-tenant zero-recall regression test passes **with the app-layer guard
+      disabled** (DB policy alone blocks leakage — reads, writes, and no-context cases)
+- [x] Service boots only with valid service-token config; fails closed otherwise
+- [x] Full pytest green, keyless (11 passed, pristine)
 
 ---
 
@@ -140,3 +140,26 @@ Next:
 
 Blocker:
 - None. Note: Issue 2 tests need `docker compose up -d` first.
+
+## 2026-07-29 — Issue 2 (feat/2-schema-rls)
+
+Completed:
+- Full M1 schema (clients/documents/atoms/jobs/lineage/decisions) in
+  `models.py` + handwritten Alembic migration 0001
+- RLS ENABLE+FORCE on all tenant tables; policy
+  `client_id = NULLIF(current_setting('app.client_id', true), '')::uuid`
+  (NULLIF guards pooled-connection '' after SET LOCAL — found by the test)
+- Non-superuser `engine_app` role created in migration (superusers bypass RLS)
+- `tenant_session()` context manager (set_config, transaction-local)
+- Fail-closed Settings (SERVICE_API_KEY required, min 16 chars) wired into create_app
+- `require_service_token` dependency (constant-time compare)
+- Zero-recall tests: cross-tenant reads, writes (WITH CHECK), no-context (zero rows),
+  app-role-not-superuser precondition
+
+Next:
+- Issue 3 (`feat/3-upload-dedupe`): clients + documents endpoints, multipart upload,
+  sha256 content addressing + per-client dedupe, local-disk storage adapter behind
+  S3-compatible interface, status machine start
+
+Blocker:
+- None.

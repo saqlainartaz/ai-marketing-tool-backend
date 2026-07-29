@@ -1,0 +1,142 @@
+# TASKS — issue queue (GitHub issues live here until a remote exists)
+
+Workflow: one issue at a time, TDD, branch `feat/N-slug`, conventional commits,
+breadcrumb on completion. Full rules: `docs/AI_CODING_RULES.md`.
+
+---
+
+## Issue 1 — Project skeleton  `feat/1-project-skeleton`  [done 2026-07-29]
+
+**Goal:** Bootable FastAPI service + tooling + operating files; pytest green keyless.
+
+**Scope:** git repo, uv project, pyproject deps, FastAPI app factory + `/health`,
+docker-compose (pgvector Postgres), pytest wiring, operating files, .gitignore.
+
+**Non-goals:** database schema, RLS, uploads, providers, pipeline.
+
+**Done when:**
+- [x] `python -m uv run pytest` passes with zero API keys (1 passed, pristine output)
+- [x] `/health` returns 200 `{"status": "ok"}` via TestClient
+- [x] `docker compose config` validates
+- [x] Operating files exist; CLAUDE.md points at AI_CODING_RULES.md
+
+---
+
+## Issue 2 — Schema + RLS  `feat/2-schema-rls`
+
+**Goal:** Full M1 schema with DB-enforced tenant isolation.
+
+**Scope:** clients/documents/atoms/jobs/lineage/decisions tables (SQLAlchemy + Alembic);
+RLS policies keyed on `current_setting('app.client_id')`; per-request session-variable
+middleware; fail-closed startup (refuse to boot on missing/invalid tenant-auth config);
+service-token auth dependency.
+
+**Non-goals:** upload handling, pipeline stages, real providers.
+
+**Done when:**
+- [ ] Alembic migration creates all tables + RLS policies against dockerized Postgres
+- [ ] Cross-tenant zero-recall regression test passes **with the app-layer guard
+      disabled** (DB policy alone blocks leakage)
+- [ ] Service boots only with valid service-token config; fails closed otherwise
+- [ ] Full pytest green, keyless
+
+---
+
+## Issue 3 — Upload + sha256 dedupe  `feat/3-upload-dedupe`
+
+**Goal:** Immutable, content-addressed raw-file intake.
+
+**Scope:** `POST /v1/clients/{id}/documents` multipart + `source_type` +
+`source_authority`; sha256 content addressing; per-client dedupe (re-upload → same
+document, 200 not duplicate); local-disk storage adapter behind an S3-compatible
+interface; document status machine start (`uploaded`).
+
+**Non-goals:** parsing, cleaning, atoms.
+
+**Done when:**
+- [ ] Duplicate upload creates no duplicate rows/files
+- [ ] Raw file is written once, never mutated; path derived from sha256
+- [ ] Document row carries source_type, source_authority, sha256, status
+- [ ] Full pytest green, keyless
+
+---
+
+## Issue 4 — Parse + clean (text/md)  `feat/4-parse-clean`
+
+**Goal:** Text/markdown parse + type-aware transcript cleaner, provenance-preserving.
+
+**Scope:** text/md parser producing structured sections with location map + eager
+heading tree (`breadcrumb`, `section_anchor`, `level_reliable`; strip TOCs); transcript
+cleaner (speaker-label normalization, filler stripping, timestamp collapsing, PII
+redaction); cleaner version recorded in lineage; golden-file tests on fixture
+transcripts; document status transitions `uploaded → parsed → cleaned`.
+
+**Non-goals:** PDF/docx (Docling lands in M1B), atomisation, embeddings.
+
+**Done when:**
+- [ ] Golden-file tests: fixture transcript → expected cleaned output, stable
+- [ ] Raw file unchanged; cleaned text stored as derived artifact
+- [ ] Lineage records `{source_sha, stage, cleaner_version, ts}` per transformation
+- [ ] Full pytest green, keyless
+
+---
+
+## Issue 5 — Fake providers + fake atomizer  `feat/5-fake-providers`
+
+**Goal:** Deterministic keyless pipeline end-to-end: cleaned text → provisional atoms
+with provenance + embeddings.
+
+**Scope:** `LLMProvider` Protocol + registry + env resolution (brand-loom pattern,
+Apache-2.0); deterministic FakeProvider; FakeEmbedder (hash-based vectors, dimension
+matching the real provider's — pin before implementing); deterministic fake atomizer
+(rule-based extraction from fixture markers → typed atoms, M1 9-type taxonomy);
+atoms land `provisional` with full provenance; jobs table + in-process async worker;
+`GET /v1/clients/{id}/atoms`.
+
+**Non-goals:** real Anthropic/Voyage calls, search, context.
+
+**Done when:**
+- [ ] Same input twice → byte-identical atoms (determinism test)
+- [ ] Every atom has document_id, location, confidence, evidence_kind, status
+- [ ] `/atoms` returns same-client data only
+- [ ] Full pytest green, keyless
+
+---
+
+## Issue 6 — E2E intake spine demo  `feat/6-e2e-spine`
+
+**Goal:** M1A acceptance: full keyless demo per docs/M1_SCOPE.md criteria 1-4, 8-11.
+
+---
+
+## M1B issues (defined when M1A ships): real providers + parity eval, Docling,
+## extraction prompts, hybrid search under RLS, /search, /context, 3-fixture demo.
+## M1C issues: confirm/override/deprecate + decisions workflow + survival tests.
+
+---
+
+# Breadcrumbs
+
+(append at end of each issue/session: Completed / Next / Blocker)
+
+## 2026-07-29 — Issue 1 (feat/1-project-skeleton)
+
+Completed:
+- git repo on `main`; issue branch `feat/1-project-skeleton`
+- uv project (invoke as `python -m uv` — scripts dir not on bash PATH)
+- pyproject with licence-ledger comments; deps: fastapi, uvicorn, sqlalchemy, alembic,
+  pydantic(-settings), psycopg, pgvector, python-multipart; dev: pytest(-asyncio),
+  httpx/httpx2, ruff
+- `create_app()` factory + `/health` (TDD: watched fail → minimal code → green, pristine)
+- docker-compose: pgvector/pgvector:pg17 with healthcheck (validated)
+- Operating files: IDEA/TASKS/RETRO, docs/{DESIGN,M1_SCOPE,API_CONTRACT,DECISIONS,
+  AI_CODING_RULES,DEPLOY_CHECKLIST}.md, CLAUDE.md (embeds rules), .github stubs
+
+Next:
+- Issue 2 (`feat/2-schema-rls`): SQLAlchemy models + Alembic migration for
+  clients/documents/atoms/jobs/lineage/decisions; RLS policies on
+  `current_setting('app.client_id')`; per-request session-var middleware; fail-closed
+  startup; zero-recall regression test (needs dockerized Postgres running)
+
+Blocker:
+- None. Note: Issue 2 tests need `docker compose up -d` first.

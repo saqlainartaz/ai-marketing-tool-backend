@@ -66,6 +66,21 @@ def list_documents(client_id: uuid.UUID, request: Request) -> list[Document]:
         return list(docs)
 
 
+@router.post("/{document_id}/reprocess", status_code=202)
+def reprocess_document(
+    client_id: uuid.UUID, document_id: uuid.UUID, request: Request
+) -> dict[str, str]:
+    """Re-run the pipeline over the immutable raw file. Idempotent: atoms are
+    replaced by content hash, so unchanged input converges to the same set."""
+    with tenant_session(request.app.state.engine, client_id) as session:
+        doc = session.get(Document, document_id)
+        if doc is None:
+            raise HTTPException(status_code=404, detail="Document not found")
+        session.add(Job(client_id=client_id, document_id=doc.id, kind="process_document"))
+        doc.status = "uploaded"
+    return {"status": "queued"}
+
+
 @router.get("/{document_id}", response_model=DocumentOut)
 def get_document(client_id: uuid.UUID, document_id: uuid.UUID, request: Request) -> Document:
     with tenant_session(request.app.state.engine, client_id) as session:

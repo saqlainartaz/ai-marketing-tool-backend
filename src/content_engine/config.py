@@ -19,3 +19,6 @@ class Settings(BaseSettings):
     admin_database_url: str = (
         "postgresql+psycopg://content_engine:content_engine_dev@localhost:5432/content_engine"
     )
+
+    # Immutable raw-file store (local disk in dev; S3-compatible interface).
+    raw_storage_root: str = "./data/raw"

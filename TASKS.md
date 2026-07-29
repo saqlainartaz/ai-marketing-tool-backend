@@ -42,7 +42,7 @@ service-token auth dependency.
 
 ---
 
-## Issue 3 — Upload + sha256 dedupe  `feat/3-upload-dedupe`
+## Issue 3 — Upload + sha256 dedupe  `feat/3-upload-dedupe`  [done 2026-07-29]
 
 **Goal:** Immutable, content-addressed raw-file intake.
 
@@ -54,10 +54,14 @@ interface; document status machine start (`uploaded`).
 **Non-goals:** parsing, cleaning, atoms.
 
 **Done when:**
-- [ ] Duplicate upload creates no duplicate rows/files
-- [ ] Raw file is written once, never mutated; path derived from sha256
-- [ ] Document row carries source_type, source_authority, sha256, status
-- [ ] Full pytest green, keyless
+- [x] Duplicate upload creates no duplicate rows/files (200 + same id on re-upload)
+- [x] Raw file is written once, never mutated; path derived from sha256 (atomic publish)
+- [x] Document row carries source_type, source_authority, sha256, status
+- [x] Full pytest green, keyless (17 passed)
+
+Breadcrumb: clients + documents routers live under service-token auth; storage is an
+S3-shaped `RawStorage` Protocol with `LocalDiskStorage`; invalid source_type → 422.
+Next: Issue 4 parse+clean. No blockers.
 
 ---
 

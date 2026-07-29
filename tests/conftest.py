@@ -2,7 +2,11 @@ import os
 
 import pytest
 
-# Tests are keyless by design: no Anthropic/Voyage keys, ever.
+# Tests are keyless and deterministic by design: pin the fake providers even
+# when a developer's .env switches the app to real ones. The live-smoke tests
+# opt in explicitly via get_llm_provider("anthropic") etc., so they still run.
+os.environ["ENGINE_LLM_PROVIDER"] = "fake"
+os.environ["ENGINE_EMBEDDING_PROVIDER"] = "fake"
 # The service token is our own config, required for fail-closed startup.
 os.environ.setdefault("SERVICE_API_KEY", "test-service-key-0123456789")
 

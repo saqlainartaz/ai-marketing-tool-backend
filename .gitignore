@@ -10,6 +10,7 @@ dist/
 # Env / secrets — never commit keys
 .env
 .env.*
+!.env.example
 
 # Local data
 data/

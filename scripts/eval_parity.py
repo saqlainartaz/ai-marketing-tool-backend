@@ -5,17 +5,34 @@ when their env key exists, so the same script works keyless and fully-keyed.
 Exit 1 on any failure. Run: python -m uv run python scripts/eval_parity.py
 """
 
+import json
 import os
 import sys
 
 from content_engine.models import EMBEDDING_DIM
 from content_engine.providers import get_embedding_provider, get_llm_provider
 
+
+def _json_parses(out: str) -> bool:
+    """Well-formedness: a JSON object is extractable (models may fence it)."""
+    start, end = out.find("{"), out.rfind("}")
+    if start == -1 or end <= start:
+        return False
+    try:
+        return isinstance(json.loads(out[start : end + 1]), dict)
+    except json.JSONDecodeError:
+        return False
+
+
 CHECKS = {
     "generate": lambda llm: bool(llm.generate("Reply with exactly: OK", max_tokens=64).strip()),
-    "generate_json": lambda llm: llm.generate(
-        "Return JSON with a single key 'ok'.", max_tokens=128
-    ).strip().startswith(("{", "[")),
+    "generate_json": lambda llm: _json_parses(
+        llm.generate(
+            "Return only a raw JSON object with a single key 'ok' set to true. "
+            "No prose, no code fences.",
+            max_tokens=2048,
+        )
+    ),
 }
 EMBED_CHECKS = {
     "embed_dim": lambda e: len(e.embed(["hello world"])[0]) == EMBEDDING_DIM,

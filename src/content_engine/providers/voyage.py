@@ -31,7 +31,8 @@ class VoyageEmbedder:
                 raise ImportError(
                     "voyageai package not installed. Run: python -m uv add voyageai"
                 ) from exc
-            self._client = voyageai.Client(api_key=self._api_key)
+            # Built-in exponential backoff — free-tier RPM limits are tight.
+            self._client = voyageai.Client(api_key=self._api_key, max_retries=5)
         return self._client
 
     def embed(self, texts: list[str], *, input_type: str = "document") -> list[list[float]]:

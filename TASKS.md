@@ -120,9 +120,15 @@ Next: Issue 6 E2E + /reprocess. No blockers.
 
 ---
 
-## Issue 6 — E2E intake spine demo  `feat/6-e2e-spine`
+## Issue 6 — E2E intake spine demo  `feat/6-e2e-spine`  [done 2026-07-29 — M1A COMPLETE]
 
 **Goal:** M1A acceptance: full keyless demo per docs/M1_SCOPE.md criteria 1-4, 8-11.
+
+Breadcrumb: `/reprocess` endpoint (202, enqueues job, atoms converge by content hash);
+test_e2e_spine covers two clients / three docs / worker pipeline / provenance-rich
+objections / API-level isolation / dedupe / reprocess idempotency. 46 tests, zero keys.
+Next: define M1B issues (real Anthropic+Voyage adapters, parity eval, Docling,
+extraction prompts, hybrid search under RLS, /search, /context). No blockers.
 
 ---
 

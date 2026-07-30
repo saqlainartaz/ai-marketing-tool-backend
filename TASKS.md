@@ -151,8 +151,32 @@ VoyageEmbedder defaults voyage-4 @1024 (env ENGINE_VOYAGE_MODEL). Next: Issue 8 
 extraction prompts. Needs ANTHROPIC_API_KEY + VOYAGE_API_KEY + a real anonymized
 transcript to validate quality. No blockers for code; keys block live validation.
 
-## Remaining M1B issues: Issue 8 extraction prompts (real atomizer), Issue 9 Docling,
-## Issue 10 hybrid search + /search, Issue 11 /context, Issue 12 real-provider demo.
+## Issue 8 — Real LLM atomizer  `feat/8-real-atomizer`  [done 2026-07-30]
+
+**Goal:** Replace the fake atomizer with Claude-driven extraction when a real provider
+is configured; validate quality on real client fixtures.
+
+**Done when:**
+- [x] LLMAtomizer: line-numbered `<document>` data block (injection hygiene), 9-type
+      taxonomy with marketing semantics, per-source-type framing, hard validation
+      (unknown types dropped, values clamped, garbage raises → job fails visibly)
+- [x] Runner routes by provider: fake → rule-based (keyless CI unchanged), real →
+      LLM atomizer; lineage records actor + prompt_hash
+- [x] Keyless tests via scripted stub LLM (parsing, clamping, determinism, fenced
+      JSON, injection delimiting) — 61 passed
+- [x] Live-tuned on real fixtures (Keira transcript, Barbara onboarding): all 9 types
+      extracted; claims_blacklist correctly flags clinical/income/privacy-sensitive
+      claims with say_instead alternatives; voice_constraints capture signature
+      language; provenance line+speaker accurate
+
+Breadcrumb: two tuning iterations were needed — the model fills its favorite types
+(insight/proof_point) before quote/voice_constraint/claims_blacklist unless coverage
+is an explicit numbered rule; cap raised to 60 atoms/doc for real corpora.
+Extraction sample saved at data/real-client/_barbara_extraction.txt (gitignored).
+Next: Issue 9 Docling (PDF/docx), then Issue 10 hybrid search + /search. No blockers.
+
+## Remaining M1B issues: Issue 9 Docling, Issue 10 hybrid search + /search,
+## Issue 11 /context, Issue 12 real-provider E2E demo.
 ## M1C issues: confirm/override/deprecate + decisions workflow + survival tests.
 
 ---

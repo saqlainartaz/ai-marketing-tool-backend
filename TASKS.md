@@ -240,8 +240,16 @@ RUN_DOCLING=1 (1 passed — model weights cached after first run).
 Also fixed in this branch: **tests now run against a dedicated `content_engine_test`
 database** (created on demand) — the suite can no longer wipe local dev data.
 
-## Remaining: MCP server (M3) — DEFERRED by user decision until after initial version.
-## Next: deployment (docs/DEPLOY_CHECKLIST.md), then frontend integration.
+## DEPLOYED 2026-07-30: live on Render (content-engine-nr4a.onrender.com), full
+## pipeline smoke-tested in production. Frontend wiring owned by Saqlain
+## (docs/FRONTEND_INTEGRATION.md).
+##
+## Active queue: (1) frontend wiring [user], (2) real-client onboarding run,
+## (3) generation quality pass, (4) auth (Clerk/NextAuth -> client_id).
+##
+## PARKED (user decision, explicit unpark required): MCP server (M3) ·
+## Google Drive auto-ingest · Whisper transcription · self-signup + billing ·
+## S3/R2 raw storage.
 
 ---
 

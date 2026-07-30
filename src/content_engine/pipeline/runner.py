@@ -6,7 +6,7 @@ artifacts and status. The atomise/embed stages join in Issue 5.
 
 import uuid
 
-from sqlalchemy import Engine, delete
+from sqlalchemy import Engine, delete, select
 
 from content_engine.db import tenant_session
 from content_engine.models import Atom, Document, LineageRecord
@@ -79,9 +79,10 @@ def run_atomise_and_embed(
 ) -> None:
     """Extract typed atoms from the cleaned text and embed them.
 
-    Idempotent by replacement: a document's atoms are deleted and re-extracted
-    atomically; identical input yields identical content hashes. (Confirmed-atom
-    survival across replacement lands in M1C via the decisions log.)
+    Idempotent by replacement — with reviewed atoms privileged: only
+    provisional atoms are replaced. Confirmed/overridden/deprecated rows
+    survive verbatim (same id, same status), and a re-extracted atom whose
+    content hash matches a surviving row is skipped rather than duplicated.
     """
     embedder = get_embedding_provider()
 
@@ -94,8 +95,18 @@ def run_atomise_and_embed(
         extracted, atomise_actor, prompt_hash = _atomise(doc.source_type, cleaned)
         vectors = embedder.embed([a.text for a in extracted])
 
-        session.execute(delete(Atom).where(Atom.document_id == doc.id))
-        for atom, vector in zip(extracted, vectors, strict=True):
+        session.execute(
+            delete(Atom).where(Atom.document_id == doc.id, Atom.status == "provisional")
+        )
+        surviving_hashes = set(
+            session.scalars(select(Atom.content_hash).where(Atom.document_id == doc.id))
+        )
+        extracted_pairs = [
+            (atom, vector)
+            for atom, vector in zip(extracted, vectors, strict=True)
+            if atom.content_hash not in surviving_hashes
+        ]
+        for atom, vector in extracted_pairs:
             session.add(
                 Atom(
                     client_id=client_id,

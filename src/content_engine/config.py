@@ -32,3 +32,8 @@ class Settings(BaseSettings):
     # In-process pipeline worker (no Redis/Celery in M1).
     worker_enabled: bool = True
     job_poll_interval: float = 0.5
+
+    # /context fast path: include the whole cleaned corpus in the bundle when a
+    # client's corpus is at most this many characters (long-context consumers
+    # can then read everything; atoms remain the durable representation).
+    context_full_corpus_max_chars: int = 100_000

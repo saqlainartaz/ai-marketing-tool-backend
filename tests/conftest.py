@@ -10,16 +10,17 @@ os.environ["ENGINE_EMBEDDING_PROVIDER"] = "fake"
 # The service token is our own config, required for fail-closed startup.
 os.environ.setdefault("SERVICE_API_KEY", "test-service-key-0123456789")
 
-ADMIN_URL = os.environ.get(
-    "ADMIN_DATABASE_URL",
-    "postgresql+psycopg://content_engine:content_engine_dev@localhost:5432/content_engine",
+# Tests run against a DEDICATED database (created on demand) so the suite can
+# never wipe local dev data. Hard-set — .env must not redirect tests.
+_MAINT_URL = "postgresql+psycopg://content_engine:content_engine_dev@localhost:5432/content_engine"
+TEST_DB = "content_engine_test"
+ADMIN_URL = f"postgresql+psycopg://content_engine:content_engine_dev@localhost:5432/{TEST_DB}"
+APP_URL = f"postgresql+psycopg://engine_app:engine_app_dev@localhost:5432/{TEST_DB}"
+os.environ["ADMIN_DATABASE_URL"] = ADMIN_URL
+os.environ["DATABASE_URL"] = APP_URL
+os.environ["WORKER_DATABASE_URL"] = (
+    f"postgresql+psycopg://engine_worker:engine_worker_dev@localhost:5432/{TEST_DB}"
 )
-APP_URL = os.environ.get(
-    "DATABASE_URL",
-    "postgresql+psycopg://engine_app:engine_app_dev@localhost:5432/content_engine",
-)
-os.environ.setdefault("ADMIN_DATABASE_URL", ADMIN_URL)
-os.environ.setdefault("DATABASE_URL", APP_URL)
 
 
 @pytest.fixture(scope="session")
@@ -32,6 +33,15 @@ def migrated_db():
     from alembic import command
     from alembic.config import Config
     from sqlalchemy import create_engine, text
+
+    maint_engine = create_engine(_MAINT_URL, isolation_level="AUTOCOMMIT")
+    with maint_engine.connect() as conn:
+        exists = conn.execute(
+            text("SELECT 1 FROM pg_database WHERE datname = :name"), {"name": TEST_DB}
+        ).scalar()
+        if not exists:
+            conn.execute(text(f'CREATE DATABASE "{TEST_DB}"'))
+    maint_engine.dispose()
 
     admin_engine = create_engine(ADMIN_URL, isolation_level="AUTOCOMMIT")
     with admin_engine.connect() as conn:

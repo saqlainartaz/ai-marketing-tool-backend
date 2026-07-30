@@ -13,6 +13,7 @@ from content_engine.models import Atom, Document, LineageRecord
 from content_engine.pipeline.atomise import ATOMIZER_VERSION, ExtractedAtom, extract_atoms
 from content_engine.pipeline.atomise_llm import LLM_ATOMIZER_VERSION, LLMAtomizer
 from content_engine.pipeline.clean import clean_for
+from content_engine.pipeline.docling_parse import BINARY_EXTENSIONS
 from content_engine.pipeline.parse import PARSER_VERSION, parse_text
 from content_engine.providers import get_embedding_provider, get_llm_provider
 from content_engine.storage import RawStorage
@@ -29,6 +30,22 @@ def _atomise(source_type: str, cleaned: str) -> tuple[list[ExtractedAtom], str, 
     return atoms, f"{LLM_ATOMIZER_VERSION}+{llm.name}", prompt_hash
 
 
+def _to_text(doc: Document, raw_bytes: bytes) -> tuple[str, str]:
+    """Route binary formats through Docling; text/markdown decodes directly.
+    Returns (text, parser_actor) for lineage."""
+    from pathlib import PurePosixPath
+
+    filename = (doc.doc_metadata or {}).get("filename") or ""
+    if PurePosixPath(filename).suffix.lower() in BINARY_EXTENSIONS:
+        from content_engine.pipeline import docling_parse
+
+        return (
+            docling_parse.convert_to_markdown(raw_bytes, filename),
+            docling_parse.docling_version(),
+        )
+    return raw_bytes.decode("utf-8", errors="replace"), PARSER_VERSION
+
+
 def run_parse_and_clean(
     engine: Engine,
     storage: RawStorage,
@@ -40,7 +57,8 @@ def run_parse_and_clean(
         if doc is None:
             raise ValueError(f"document {document_id} not found for tenant")
 
-        raw = storage.get(doc.raw_path).decode("utf-8", errors="replace")
+        raw_bytes = storage.get(doc.raw_path)
+        raw, parse_actor = _to_text(doc, raw_bytes)
 
         parsed = parse_text(raw)
         session.add(
@@ -49,7 +67,7 @@ def run_parse_and_clean(
                 document_id=doc.id,
                 source_sha=doc.sha256,
                 stage="parse",
-                actor=PARSER_VERSION,
+                actor=parse_actor,
                 params={"sections": len(parsed.sections)},
             )
         )

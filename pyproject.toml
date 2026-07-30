@@ -11,7 +11,7 @@ requires-python = ">=3.13"
 #   fastapi (MIT) · uvicorn (BSD-3) · sqlalchemy (MIT) · alembic (MIT)
 #   pydantic / pydantic-settings (MIT) · psycopg (LGPL-3.0 — dynamic linking, unmodified: OK)
 #   pgvector (MIT) · python-multipart (Apache-2.0) · httpx (BSD-3)
-#   anthropic (MIT) · voyageai (MIT)
+#   anthropic (MIT) · voyageai (MIT) · docling (MIT)
 dependencies = [
     "fastapi>=0.115",
     "uvicorn[standard]>=0.32",
@@ -25,6 +25,7 @@ dependencies = [
     "anthropic>=0.120.2",
     "voyageai>=0.5.0",
     "python-dotenv>=1.2.2",
+    "docling>=2.117.0",
 ]
 
 [dependency-groups]

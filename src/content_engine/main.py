@@ -6,7 +6,15 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from sqlalchemy import create_engine
 
-from content_engine.api import atoms, clients, context, decisions, documents, search
+from content_engine.api import (
+    atoms,
+    clients,
+    context,
+    decisions,
+    documents,
+    search,
+    voice_profiles,
+)
 from content_engine.config import Settings
 from content_engine.jobs import worker_loop
 from content_engine.storage import LocalDiskStorage
@@ -47,6 +55,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(search.router)
     app.include_router(context.router)
     app.include_router(decisions.router)
+    app.include_router(voice_profiles.router)
 
     @app.get("/health")
     def health() -> dict[str, str]:

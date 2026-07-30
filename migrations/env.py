@@ -8,9 +8,11 @@ from content_engine.models import Base
 config = context.config
 
 # Migrations always run as the admin role; the app role is subject to RLS.
+from content_engine.config import normalize_pg_url  # noqa: E402
+
 admin_url = os.environ.get("ADMIN_DATABASE_URL")
 if admin_url:
-    config.set_main_option("sqlalchemy.url", admin_url)
+    config.set_main_option("sqlalchemy.url", normalize_pg_url(admin_url))
 
 target_metadata = Base.metadata
 

@@ -1,5 +1,15 @@
-from pydantic import Field, SecretStr
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def normalize_pg_url(url: str) -> str:
+    """Managed hosts (Render, Heroku) hand out postgres:// URLs; SQLAlchemy 2
+    needs an explicit driver. Idempotent."""
+    if url.startswith("postgres://"):
+        return url.replace("postgres://", "postgresql+psycopg://", 1)
+    if url.startswith("postgresql://"):
+        return url.replace("postgresql://", "postgresql+psycopg://", 1)
+    return url
 
 
 class Settings(BaseSettings):
@@ -37,3 +47,8 @@ class Settings(BaseSettings):
     # client's corpus is at most this many characters (long-context consumers
     # can then read everything; atoms remain the durable representation).
     context_full_corpus_max_chars: int = 100_000
+
+    @field_validator("database_url", "admin_database_url", "worker_database_url")
+    @classmethod
+    def _normalize_urls(cls, value: str) -> str:
+        return normalize_pg_url(value)

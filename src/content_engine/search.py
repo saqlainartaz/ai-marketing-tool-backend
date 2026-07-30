@@ -27,31 +27,40 @@ class SearchHit:
 def hybrid_search(
     session: Session,
     query_text: str,
-    query_embedding: list[float],
+    query_embedding: list[float] | None,
     *,
     atom_type: str | None = None,
     limit: int = 20,
 ) -> list[SearchHit]:
+    """query_embedding=None degrades gracefully to keyword-only retrieval
+    (embedding provider outage/rate limit must never take search down)."""
+
     def base(stmt):
         stmt = stmt.where(Atom.status != "deprecated")
         return stmt.where(Atom.atom_type == atom_type) if atom_type else stmt
 
-    vector_stmt = base(
-        select(Atom.id)
-        .where(Atom.embedding.isnot(None))
-        .order_by(Atom.embedding.cosine_distance(query_embedding))
-        .limit(LEG_LIMIT)
-    )
+    legs = []
+    if query_embedding is not None:
+        legs.append(
+            base(
+                select(Atom.id)
+                .where(Atom.embedding.isnot(None))
+                .order_by(Atom.embedding.cosine_distance(query_embedding))
+                .limit(LEG_LIMIT)
+            )
+        )
     tsquery = func.websearch_to_tsquery("english", query_text)
-    text_stmt = base(
-        select(Atom.id)
-        .where(Atom.tsv.op("@@")(tsquery))
-        .order_by(func.ts_rank(Atom.tsv, tsquery).desc())
-        .limit(LEG_LIMIT)
+    legs.append(
+        base(
+            select(Atom.id)
+            .where(Atom.tsv.op("@@")(tsquery))
+            .order_by(func.ts_rank(Atom.tsv, tsquery).desc())
+            .limit(LEG_LIMIT)
+        )
     )
 
     scores: dict[uuid.UUID, float] = {}
-    for stmt in (vector_stmt, text_stmt):
+    for stmt in legs:
         for rank, atom_id in enumerate(session.scalars(stmt), start=1):
             scores[atom_id] = scores.get(atom_id, 0.0) + 1.0 / (RRF_K + rank)
 

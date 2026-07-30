@@ -92,8 +92,11 @@ def _voice_snapshot(session: Session) -> VoiceSnapshot:
 
 @router.post("/context", response_model=ContextBundle)
 def context(client_id: uuid.UUID, body: ContextRequest, request: Request) -> ContextBundle:
-    embedder = get_embedding_provider()
-    [query_vec] = embedder.embed([body.task], input_type="query")
+    try:
+        [query_vec] = get_embedding_provider().embed([body.task], input_type="query")
+    except Exception:
+        # Embedding outage (e.g. rate limit): degrade to keyword-only retrieval.
+        query_vec = None
     settings = request.app.state.settings
     storage = request.app.state.storage
 

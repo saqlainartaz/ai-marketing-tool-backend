@@ -229,9 +229,19 @@ proof-vs-blacklist conflict, and demanded crisis-support boilerplate before any
 ideation reference — the Open Questions pattern working as designed.
 Saved: data/real-client/_voice_profile_v1.json (gitignored).
 
-## Follow-ups: (a) Issue 9 Docling (PDF/docx — ~2GB install, needs go-ahead);
-## (b) tests and dev share one database — conftest drops the schema, wiping dev data;
-##     split into a dedicated test database; (c) M3 MCP server; (d) deployment.
+## Issue 9 — Docling PDF/docx ingestion  `feat/9-docling`  [done 2026-07-30]
+
+docling (MIT) installed; pipeline routes .pdf/.docx/.pptx/.xlsx through a lazy
+Docling→markdown adapter (module-singleton converter; text/md files never touch it),
+then the existing parse→clean→atomise flow. Lineage records the docling version as
+parse actor. Fast keyless tests stub the converter; real conversion verified via
+RUN_DOCLING=1 (1 passed — model weights cached after first run).
+
+Also fixed in this branch: **tests now run against a dedicated `content_engine_test`
+database** (created on demand) — the suite can no longer wipe local dev data.
+
+## Remaining: MCP server (M3) — DEFERRED by user decision until after initial version.
+## Next: deployment (docs/DEPLOY_CHECKLIST.md), then frontend integration.
 
 ---
 

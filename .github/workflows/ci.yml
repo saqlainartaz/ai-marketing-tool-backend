@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    # Keyless by design: no Anthropic/Voyage secrets anywhere in CI.
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: content_engine
+          POSTGRES_PASSWORD: content_engine_dev
+          POSTGRES_DB: content_engine
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U content_engine -d content_engine"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Lint
+        run: uv run ruff check .
+
+      - name: Tests (keyless — fake providers)
+        run: uv run pytest -q

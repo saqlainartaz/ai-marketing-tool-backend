@@ -28,8 +28,11 @@ class SearchHitOut(AtomOut):
 
 @router.post("/search", response_model=list[SearchHitOut])
 def search(client_id: uuid.UUID, body: SearchRequest, request: Request) -> list[SearchHitOut]:
-    embedder = get_embedding_provider()
-    [query_vec] = embedder.embed([body.query], input_type="query")
+    try:
+        [query_vec] = get_embedding_provider().embed([body.query], input_type="query")
+    except Exception:
+        # Embedding outage (e.g. rate limit): degrade to keyword-only retrieval.
+        query_vec = None
 
     with tenant_session(request.app.state.engine, client_id) as session:
         hits = hybrid_search(

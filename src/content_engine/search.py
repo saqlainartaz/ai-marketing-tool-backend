@@ -33,6 +33,7 @@ def hybrid_search(
     limit: int = 20,
 ) -> list[SearchHit]:
     def base(stmt):
+        stmt = stmt.where(Atom.status != "deprecated")
         return stmt.where(Atom.atom_type == atom_type) if atom_type else stmt
 
     vector_stmt = base(

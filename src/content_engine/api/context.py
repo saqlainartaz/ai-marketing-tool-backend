@@ -76,7 +76,7 @@ def _voice_snapshot(session: Session) -> VoiceSnapshot:
         return list(
             session.scalars(
                 select(Atom.text)
-                .where(Atom.atom_type == atom_type)
+                .where(Atom.atom_type == atom_type, Atom.status != "deprecated")
                 .order_by(Atom.impact.desc().nulls_last(), Atom.confidence.desc().nulls_last())
                 .limit(limit)
             )
@@ -104,7 +104,7 @@ def context(client_id: uuid.UUID, body: ContextRequest, request: Request) -> Con
             _to_out(atom)
             for atom in session.scalars(
                 select(Atom)
-                .where(Atom.atom_type.in_(CONSTRAINT_TYPES))
+                .where(Atom.atom_type.in_(CONSTRAINT_TYPES), Atom.status != "deprecated")
                 .order_by(Atom.impact.desc().nulls_last())
                 .limit(50)
             )

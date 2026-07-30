@@ -200,8 +200,20 @@ income-promise warnings. M1 acceptance criteria 5-7 demonstrated on real data.
 Note: Voyage free tier is 3 RPM until a payment method is added — retries absorb it
 but ingestion at volume will be slow until then.
 
-## Remaining: Issue 9 Docling (PDF/docx — heavy dependency, needs go-ahead).
-## M1C issues: confirm/override/deprecate + decisions workflow + survival tests.
+## Issue 13 — Operator review workflow (M1C)  `feat/13-review-workflow`  [done 2026-07-30]
+
+POST /v1/clients/{id}/atoms/{atom_id}/decision (confirm | override | deprecate) with
+mandatory reason + actor → append-only decisions log (GET /decisions). Override edits
+text/payload, re-hashes, re-embeds, confirms. Deprecated atoms excluded from /search,
+/context atoms, voice snapshot, and constraints. Reprocessing now replaces only
+provisional atoms: reviewed rows survive verbatim (same id/status) and re-extracted
+duplicates are skipped by content hash. 76 keyless tests green.
+
+**M1 acceptance criteria: all 11 met** (criteria 5-7 demonstrated live on real client
+data via scripts/live_demo.py, the rest by the keyless suite). M1 is COMPLETE.
+
+## Remaining M1B extra: Issue 9 Docling (PDF/docx — heavy ~2GB dependency, needs
+## go-ahead). Next milestone: M2 voice profiles.
 
 ---
 

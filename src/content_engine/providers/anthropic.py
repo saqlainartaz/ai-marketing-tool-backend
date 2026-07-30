@@ -52,7 +52,10 @@ class AnthropicLLM:
         }
         if system is not None:
             kwargs["system"] = system
-        response = client.beta.messages.create(**kwargs)
+        # Stream + final message: large max_tokens would otherwise trip the
+        # SDK's 10-minute non-streaming guard.
+        with client.beta.messages.stream(**kwargs) as stream:
+            response = stream.get_final_message()
         if response.stop_reason == "refusal":
             category = getattr(getattr(response, "stop_details", None), "category", None)
             raise RuntimeError(f"Model declined the request (refusal, category={category})")

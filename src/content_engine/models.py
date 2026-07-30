@@ -123,6 +123,29 @@ class Atom(Base):
     created_at: Mapped[datetime] = mapped_column(server_default=text("now()"))
 
 
+class VoiceProfile(Base):
+    """Versioned voice profile — recomputed as the corpus grows, diffable
+    against the previous version (TribeAI 'We Are / We Are Not' schema)."""
+
+    __tablename__ = "voice_profiles"
+    __table_args__ = (
+        UniqueConstraint("client_id", "version", name="uq_voice_profiles_client_version"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        primary_key=True, server_default=text("gen_random_uuid()")
+    )
+    client_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("clients.id"))
+    version: Mapped[int] = mapped_column(Integer)
+    status: Mapped[str] = mapped_column(server_default="draft")  # draft | approved
+    payload: Mapped[dict[str, Any]]
+    corpus: Mapped[dict[str, Any]] = mapped_column(server_default=text("'{}'::jsonb"))
+    diff: Mapped[dict[str, Any]] = mapped_column(server_default=text("'{}'::jsonb"))
+    built_by: Mapped[str]
+    prompt_hash: Mapped[str | None]
+    created_at: Mapped[datetime] = mapped_column(server_default=text("now()"))
+
+
 class Job(Base):
     __tablename__ = "jobs"
     __table_args__ = (Index("ix_jobs_status", "status"),)
@@ -131,7 +154,9 @@ class Job(Base):
         primary_key=True, server_default=text("gen_random_uuid()")
     )
     client_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("clients.id"))
-    document_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("documents.id", ondelete="CASCADE"))
+    document_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("documents.id", ondelete="CASCADE")
+    )
     kind: Mapped[str]  # e.g. "process_document"
     status: Mapped[str] = mapped_column(server_default="queued")
     attempts: Mapped[int] = mapped_column(Integer, server_default="0")

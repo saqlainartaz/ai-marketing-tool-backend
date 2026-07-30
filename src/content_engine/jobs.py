@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 from content_engine.db import tenant_session
 from content_engine.models import Document, Job
 from content_engine.pipeline.runner import run_full_pipeline
+from content_engine.pipeline.voice_profile import build_voice_profile
 from content_engine.storage import RawStorage
 
 logger = logging.getLogger(__name__)
@@ -35,11 +36,14 @@ def claim_and_run_next(worker_engine: Engine, app_engine: Engine, storage: RawSt
             return False
         job.status = "running"
         job.attempts += 1
-        job_id, client_id, document_id = job.id, job.client_id, job.document_id
+        job_id, client_id, document_id, kind = job.id, job.client_id, job.document_id, job.kind
 
     error: str | None = None
     try:
-        run_full_pipeline(app_engine, storage, client_id, document_id)
+        if kind == "build_voice_profile":
+            build_voice_profile(app_engine, client_id)
+        else:
+            run_full_pipeline(app_engine, storage, client_id, document_id)
     except Exception as exc:  # recorded, never swallowed silently
         logger.exception("job %s failed", job_id)
         error = f"{type(exc).__name__}: {exc}"[:500]
@@ -48,7 +52,7 @@ def claim_and_run_next(worker_engine: Engine, app_engine: Engine, storage: RawSt
         job = session.get(Job, job_id)
         job.status = "failed" if error else "done"
         job.error = error
-    if error:
+    if error and document_id is not None:
         with tenant_session(app_engine, client_id) as session:
             doc = session.get(Document, document_id)
             if doc is not None:

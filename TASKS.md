@@ -212,8 +212,26 @@ duplicates are skipped by content hash. 76 keyless tests green.
 **M1 acceptance criteria: all 11 met** (criteria 5-7 demonstrated live on real client
 data via scripts/live_demo.py, the rest by the keyless suite). M1 is COMPLETE.
 
-## Remaining M1B extra: Issue 9 Docling (PDF/docx — heavy ~2GB dependency, needs
-## go-ahead). Next milestone: M2 voice profiles.
+## Issue 14 — Voice profiles (M2)  `feat/14-voice-profiles`  [done 2026-07-30]
+
+Versioned, diffable, evidence-cited voice profiles (TribeAI schema): We Are/We Are Not
+with cited atom evidence + confidence, personality archetype, tone matrix (voice
+constant, tone flexes), terminology tiers, language that works/avoid, Open Questions
+with mandatory recommendations. Migration 0004 (voice_profiles + RLS; jobs.document_id
+nullable for client-level jobs). Builder routes fake/LLM like the atomizer; invented
+evidence atom_ids scrubbed. Worker dispatches by job kind. Endpoints: POST build (202,
+409 without atoms), GET latest/?version, GET /versions, POST /{v}/approve. Anthropic
+provider now streams (SDK 10-min guard on large max_tokens). 80 keyless tests green.
+
+Live build over 105 real atoms: profile caught that the demo corpus mixes TWO people
+(Kara + Barbara), listed the exact atom ids to quarantine, flagged the revenue-figure
+proof-vs-blacklist conflict, and demanded crisis-support boilerplate before any
+ideation reference — the Open Questions pattern working as designed.
+Saved: data/real-client/_voice_profile_v1.json (gitignored).
+
+## Follow-ups: (a) Issue 9 Docling (PDF/docx — ~2GB install, needs go-ahead);
+## (b) tests and dev share one database — conftest drops the schema, wiping dev data;
+##     split into a dedicated test database; (c) M3 MCP server; (d) deployment.
 
 ---
 

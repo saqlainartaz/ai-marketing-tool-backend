@@ -175,8 +175,32 @@ is an explicit numbered rule; cap raised to 60 atoms/doc for real corpora.
 Extraction sample saved at data/real-client/_barbara_extraction.txt (gitignored).
 Next: Issue 9 Docling (PDF/docx), then Issue 10 hybrid search + /search. No blockers.
 
-## Remaining M1B issues: Issue 9 Docling, Issue 10 hybrid search + /search,
-## Issue 11 /context, Issue 12 real-provider E2E demo.
+## Issue 10 — Hybrid search + /search  `feat/10-hybrid-search`  [done 2026-07-30]
+
+pgvector cosine + full-text legs (both under RLS) fused with RRF; POST /search with
+type filter, 422 on blank query, ranked results with provenance + untrusted label.
+(Built before Issue 9 — Docling is a heavy dependency, search had higher value.)
+
+## Issue 11 — /context bundle  `feat/11-context-endpoint`  [done 2026-07-30]
+
+Authority-ordered bundle: voice snapshot (brand-loom shape, derived from quote/
+voice_constraint/claims_blacklist atoms) → constraints (always included) →
+hybrid-searched atoms (confirmed-first) → full cleaned corpus fast path
+(context_full_corpus_max_chars, default 100k chars). Staleness flags, completeness
+counts, tenant-scoped, 70 keyless tests green.
+
+## Issue 12 — Live real-provider E2E demo  `feat/12-live-demo`  [done 2026-07-30]
+
+scripts/live_demo.py: Keira transcript + Barbara onboarding through upload → worker →
+Claude Opus 5 extraction → Voyage embeddings → Postgres → /search + /context.
+Result: 110 atoms; objection search surfaced real objections from both documents with
+line+speaker provenance; /context voice snapshot captured faith language + "don't
+sanitize her into corporate language"; avoid_phrases carried trauma-content and
+income-promise warnings. M1 acceptance criteria 5-7 demonstrated on real data.
+Note: Voyage free tier is 3 RPM until a payment method is added — retries absorb it
+but ingestion at volume will be slow until then.
+
+## Remaining: Issue 9 Docling (PDF/docx — heavy dependency, needs go-ahead).
 ## M1C issues: confirm/override/deprecate + decisions workflow + survival tests.
 
 ---

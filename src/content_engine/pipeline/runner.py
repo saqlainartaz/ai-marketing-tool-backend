@@ -10,11 +10,23 @@ from sqlalchemy import Engine, delete
 
 from content_engine.db import tenant_session
 from content_engine.models import Atom, Document, LineageRecord
-from content_engine.pipeline.atomise import ATOMIZER_VERSION, extract_atoms
+from content_engine.pipeline.atomise import ATOMIZER_VERSION, ExtractedAtom, extract_atoms
+from content_engine.pipeline.atomise_llm import LLM_ATOMIZER_VERSION, LLMAtomizer
 from content_engine.pipeline.clean import clean_for
 from content_engine.pipeline.parse import PARSER_VERSION, parse_text
-from content_engine.providers import get_embedding_provider
+from content_engine.providers import get_embedding_provider, get_llm_provider
 from content_engine.storage import RawStorage
+
+
+def _atomise(source_type: str, cleaned: str) -> tuple[list[ExtractedAtom], str, str | None]:
+    """Route to the LLM atomizer when a real provider is configured; the
+    deterministic rule-based atomizer keeps keyless environments working.
+    Returns (atoms, actor, prompt_hash)."""
+    llm = get_llm_provider()
+    if llm.name == "fake":
+        return extract_atoms(source_type, cleaned), ATOMIZER_VERSION, None
+    atoms, prompt_hash = LLMAtomizer(llm).extract(source_type, cleaned)
+    return atoms, f"{LLM_ATOMIZER_VERSION}+{llm.name}", prompt_hash
 
 
 def run_parse_and_clean(
@@ -79,7 +91,7 @@ def run_atomise_and_embed(
             raise ValueError(f"document {document_id} is not cleaned yet")
 
         cleaned = storage.get(doc.cleaned_path).decode("utf-8", errors="replace")
-        extracted = extract_atoms(doc.source_type, cleaned)
+        extracted, atomise_actor, prompt_hash = _atomise(doc.source_type, cleaned)
         vectors = embedder.embed([a.text for a in extracted])
 
         session.execute(delete(Atom).where(Atom.document_id == doc.id))
@@ -106,7 +118,8 @@ def run_atomise_and_embed(
                 document_id=doc.id,
                 source_sha=doc.sha256,
                 stage="atomise",
-                actor=ATOMIZER_VERSION,
+                actor=atomise_actor,
+                prompt_hash=prompt_hash,
                 params={"atoms": len(extracted)},
             )
         )

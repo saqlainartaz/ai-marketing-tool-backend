@@ -244,8 +244,9 @@ database** (created on demand) — the suite can no longer wipe local dev data.
 ## pipeline smoke-tested in production. Frontend wiring owned by Saqlain
 ## (docs/FRONTEND_INTEGRATION.md).
 ##
-## Active queue: (1) frontend wiring [user], (2) real-client onboarding run,
-## (3) generation quality pass, (4) auth (Clerk/NextAuth -> client_id).
+## Active queue: (1) merge frontend `feat/engine-wiring` + Vercel env vars [user],
+## (2) Voyage payment method [user, pre-demo], (3) real-client onboarding run,
+## (4) auth (Clerk/NextAuth -> client_id).
 ##
 ## PARKED (user decision, explicit unpark required): MCP server (M3) ·
 ## Google Drive auto-ingest · Whisper transcription · self-signup + billing ·
@@ -301,3 +302,31 @@ Next:
 
 Blocker:
 - None.
+
+## 2026-07-31 — Session: embed fallback + frontend milestone (console, LinkedIn, drill-downs)
+
+Completed (this repo):
+- Issue 16 (`feat/16-embed-fallback`): hybrid_search takes `query_embedding | None`;
+  /search + /context wrap the embed call and degrade to keyword-only on provider
+  failure (Voyage 3 RPM free-tier caused production 500s). 2 regression tests.
+
+Completed (frontend repo, branch `feat/engine-wiring` @ 1089633 — NOT merged):
+- /internal redesigned as a proper admin console (roster + detail, stat cards,
+  unified single-action upload, paste intake, pipeline table w/ polling)
+- Stat-card drill-downs: atoms browser exposing the M1C confirm/deprecate review
+  workflow (first UI for it), full voice-profile view w/ Approve, objections filter
+- LinkedIn generation: linkedin-post-writer skill (grounding rules override craft),
+  context-mined idea cards, free-form chat flow; all 3 generation routes now append
+  the full cleaned corpus from /context (fidelity fix)
+- Client login links (HMAC, 30d), /profile client view, retry-fetch resilience,
+  rotating thinking status; removed "set as active client" module
+- `DEMO.local.md` runbook written (gitignored — contains live secrets)
+
+Next:
+- User: Voyage payment method, merge frontend branch, Vercel env vars, rotate
+  Render DB password, pre-onboard a rich client before demo
+- Code (on request): label unwired mock tools "Coming soon"; saved posts w/ atom
+  citations; landing-page generator
+
+Blocker:
+- None. Voyage 3 RPM cap is the only production risk (mitigated by keyword fallback).
